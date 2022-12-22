@@ -78,8 +78,12 @@ def ell(Rstar,Re,theta,beta,is_square = False):
     ------
     ell: the distance ell
     """
+    # Calculate d^2
     d2 = d(D,Rstar,theta,True)
-    ell2 = Re**2 + d2*np.cos(theta)**2 - 2*Re*np.sqrt(d2)*np.cos(theta)*np.cos(beta)
+    # Get d
+    small_d = np.sqrt(d2)
+    # Calculate ell^2
+    ell2 = Re**2 + d2*np.cos(theta)**2 - 2*Re*small_d*np.cos(theta)*np.cos(beta)
     if is_square is False:
         return np.sqrt(ell2)
     else:
@@ -105,17 +109,18 @@ def rPrime(D,Rstar,Re,theta,phi,beta):
     r': the distance r'
     """
     # ell^2
-    ell2 = ell(Re,theta,beta,True)
+    ell2 = ell(Rstar,theta,beta,True)
     # d^2
     d2 = d(D,Rstar,theta,True)
     # h
     h = np.sqrt(d2)*np.sin(theta)
     # cos(iota) and iota
     cosIota = (Re**2 - ell2 - d2*np.cos(theta)**2)/(2*np.cos(theta)*np.sqrt(ell2*d2))
-    iota = np.arccos(cosIota)
+    #iota = np.arccos(cosIota)
     # r'^2
-    rp2 = ell2*cosIota**2 + (np.sqrt(ell2)*np.sin(iota) - h*np.sin(phi))**2 + h**2*np.cos(phi)**2
-    return np.sqrt(rp2)
+    #rp2 = ell2*cosIota**2 + (np.sqrt(ell2)*np.sin(iota) - h*np.sin(phi))**2 + h**2*np.cos(phi)**2
+    #return np.sqrt(rp2)
+    return cosIota
 
     
 
@@ -123,9 +128,10 @@ if __name__ == '__main__':
    D =3
    Rstar = 8.5
    Re = 8.5
-   theta = 0.01*np.pi
+   theta = 0.001*np.pi
    phi = 0.01
    beta = 0
    print(d(D,Rstar,theta))
-   print(sanityCheck(d(D,Rstar,theta), D, theta))
+   print(ell(Rstar,Re,theta,beta))
+   print(Re- d(D,Rstar,theta)*np.cos(theta))
    print(rPrime(D,Rstar,Re,theta,phi,beta))
