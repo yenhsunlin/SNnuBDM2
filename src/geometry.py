@@ -48,8 +48,10 @@ def d(D,Rstar,theta,is_square = False):
     ------
     d: the l.o.s distance d
     """
-    root = np.sqrt(2*(Rstar**2*np.cos(theta)**2*(2*D**2 - Rstar**2 + Rstar**2*np.cos(2*theta))))
-    common = D**2 + Rstar**2 - 2*Rstar**2*np.sin(theta)**2
+    sinTheta = np.sin(theta)
+    root = 2*Rstar*np.sqrt((D + Rstar*sinTheta)*(D - Rstar*sinTheta)*(1 - sinTheta)*(1 + sinTheta))
+    #np.sqrt(2*(Rstar**2*np.cos(theta)**2*(2*D**2 - Rstar**2 + Rstar**2*np.cos(2*theta))))
+    common = D**2 + Rstar**2 - 2*Rstar**2*sinTheta**2
     # d square, there are two solutions, one with plus sign the other minus sign
     # according to preliminary numerical examination, it seems minus is more
     # plausible. 
@@ -91,7 +93,7 @@ def ell(Rstar,Re,theta,beta,is_square = False):
 
 
 # %% Calculate r'
-def rPrime(D,Rstar,Re,theta,phi,beta):
+def rPrime(D,Rstar,Re,theta,phi,beta,tolerance = 1e-15):
     """
     Calculate the distance from boosted point to GC r'
     
@@ -109,29 +111,40 @@ def rPrime(D,Rstar,Re,theta,phi,beta):
     r': the distance r'
     """
     # ell^2
-    ell2 = ell(Rstar,theta,beta,True)
+    ell2 = ell(Rstar,Re,theta,beta,True)
     # d^2
     d2 = d(D,Rstar,theta,True)
     # h
     h = np.sqrt(d2)*np.sin(theta)
     # cos(iota) and iota
     cosIota = (Re**2 - ell2 - d2*np.cos(theta)**2)/(2*np.cos(theta)*np.sqrt(ell2*d2))
-    #iota = np.arccos(cosIota)
+    # Using sin(arccos(x)) = sqrt(1-x^2)
+    if 0 <= np.abs(cosIota) <= 1:
+        # normal case
+        sinIota = np.sqrt(1 - cosIota**2)
+    elif np.abs(cosIota) - 1 < tolerance:
+        # cosIota is outside the valid range but its value is still within the
+        # tolerance, which implies abs(cosIota) = 1 is still ok to our calculation.
+        cosIota = 1
+        sinIota = 0
+    else:
+        # cosIota is not only outside the valid range but also untolerable
+        raise print('cosIota value is outside the tolarance range, please check again')
     # r'^2
-    #rp2 = ell2*cosIota**2 + (np.sqrt(ell2)*np.sin(iota) - h*np.sin(phi))**2 + h**2*np.cos(phi)**2
-    #return np.sqrt(rp2)
-    return cosIota
+    rp2 = ell2*cosIota**2 + (np.sqrt(ell2)*sinIota - h*np.sin(phi))**2 + h**2*np.cos(phi)**2
+    return np.sqrt(rp2),cosIota
 
     
 
 if __name__ == '__main__':
-   D =3
+   D = 11
    Rstar = 8.5
    Re = 8.5
-   theta = 0.001*np.pi
-   phi = 0.01
+   theta = 0.01*np.pi
+   phi = 1
    beta = 0
    print(d(D,Rstar,theta))
+   print(sanityCheck(d(D,Rstar,theta),D,theta))
    print(ell(Rstar,Re,theta,beta))
-   print(Re- d(D,Rstar,theta)*np.cos(theta))
+   print((Re- d(D,Rstar,theta)*np.cos(theta)))
    print(rPrime(D,Rstar,Re,theta,phi,beta))
