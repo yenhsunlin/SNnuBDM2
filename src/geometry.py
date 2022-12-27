@@ -12,65 +12,75 @@
 """
 
 import numpy as np
+from constants import *
+import warnings
 
 
-# %% Sanity check
-def sanityCheck(d,D,theta):
+# %% User-derined warning
+class ToleranceWarning(UserWarning):
+    pass
+
+
+# %% Get the scattering angle alpha
+def get_cosPsi(d,Rstar,theta):
     """
-    Do a sanity check that the inputs satisfy -1 <= d*sin(theta)/D <= 1
+    Get the cosine value of scattering angle cos(psi).
+    If we did it with law of cosine, then for the case of psi > pi/2,
+    it will always return pi - psi which cannot reflect the pratical
+    situation
     
     Input
     ------
     d: the l.o.s distance d
-    D: the SNv propagation distance D
+    Rstar: the distance between Earth and SN
     theta: the open-angle in rad
     
     Output
     ------
-    bool: is the inputs sane?
+    psi: scattering angle in rad
     """
-    return -1 <= d*np.sin(theta)/D <= 1
-    
+    # Get D^2
+    D2 = get_D(d,Rstar,theta,True)
+    D = np.sqrt(D2)
+    # Get cos(alpha)
+    cosPsi = (Rstar**2 - D2 - d**2)/(2*D*d)
+    return cosPsi
 
-# %% Calculate the l.o.s distance d
-def d(D,Rstar,theta,is_square = False):
+
+# %% Calculate D
+def get_D(d,Rstar,theta,is_square = False):
     """
-    Calculate the l.o.s distance d 
+    Calculate the distance between SN and boosted point D
     
     Input
     ------
-    D: the SNv propagation distance D
+    d: the l.o.s distance d
     Rstar: the distance between Earth and SN
     theta: the open-angle in rad
     is_square: return the square of such distance, default is False
     
     Output
     ------
-    d: the l.o.s distance d
+    D: the distance D
     """
-    sinTheta = np.sin(theta)
-    root = 2*Rstar*np.sqrt((D + Rstar*sinTheta)*(D - Rstar*sinTheta)*(1 - sinTheta)*(1 + sinTheta))
-    #np.sqrt(2*(Rstar**2*np.cos(theta)**2*(2*D**2 - Rstar**2 + Rstar**2*np.cos(2*theta))))
-    common = D**2 + Rstar**2 - 2*Rstar**2*sinTheta**2
-    # d square, there are two solutions, one with plus sign the other minus sign
-    # according to preliminary numerical examination, it seems minus is more
-    # plausible. 
-    # d2Plus = common + root
-    d2Minus = common - root
+    # Calculate D^2 via law of cosine
+    D2 = d**2 + Rstar**2 - 2*d*Rstar*np.cos(theta)
     if is_square is False:
-        return np.sqrt(d2Minus)
+        return np.sqrt(D2)
+    elif is_square is True:
+        return D2
     else:
-        return d2Minus
+        raise ValueError('\'is_square\' must be either True or False')
     
-    
+
 # %% Calculate ell
-def ell(Rstar,Re,theta,beta,is_square = False):
+def get_ell(d,Re,theta,beta,is_square = False):
     """
     Calculate the distance ell
     
     Input
     ------
-    Rstar: the distance between Earth and SN
+    d: the l.o.s distance d
     Re: the distance between Earth and the GC
     theta: the open-angle in rad
     beta: the off-center angle in rad
@@ -80,20 +90,18 @@ def ell(Rstar,Re,theta,beta,is_square = False):
     ------
     ell: the distance ell
     """
-    # Calculate d^2
-    d2 = d(D,Rstar,theta,True)
-    # Get d
-    small_d = np.sqrt(d2)
-    # Calculate ell^2
-    ell2 = Re**2 + d2*np.cos(theta)**2 - 2*Re*small_d*np.cos(theta)*np.cos(beta)
+    # Calculate ell^2 via law of cosine
+    ell2 = Re**2 + (d*np.cos(theta))**2 - 2*Re*d*np.cos(theta)*np.cos(beta)
     if is_square is False:
         return np.sqrt(ell2)
-    else:
+    elif is_square is True:
         return ell2
+    else:
+        raise ValueError('\'is_square\' must be either True or False')
 
 
 # %% Calculate r'
-def rPrime(D,Rstar,Re,theta,phi,beta,tolerance = 1e-15):
+def get_rprime(d,Rstar,Re,theta,phi,beta,tolerance = 1e-10):
     """
     Calculate the distance from boosted point to GC r'
     
@@ -111,40 +119,53 @@ def rPrime(D,Rstar,Re,theta,phi,beta,tolerance = 1e-15):
     r': the distance r'
     """
     # ell^2
-    ell2 = ell(Rstar,Re,theta,beta,True)
-    # d^2
-    d2 = d(D,Rstar,theta,True)
+    ell2 = get_ell(d,Re,theta,beta,True)
+    # D^2
+    D2 = get_D(d,Rstar,theta,True)
     # h
-    h = np.sqrt(d2)*np.sin(theta)
+    h = d*np.sin(theta)
     # cos(iota) and iota
-    cosIota = (Re**2 - ell2 - d2*np.cos(theta)**2)/(2*np.cos(theta)*np.sqrt(ell2*d2))
+    cosIota = (Re**2 - ell2 - (d*np.cos(theta))**2)/(2*np.cos(theta)*np.sqrt(ell2)*d)
     # Using sin(arccos(x)) = sqrt(1-x^2)
     if 0 <= np.abs(cosIota) <= 1:
         # normal case
         sinIota = np.sqrt(1 - cosIota**2)
-    elif np.abs(cosIota) - 1 < tolerance:
-        # cosIota is outside the valid range but its value is still within the
-        # tolerance, which implies abs(cosIota) = 1 is still ok to our calculation.
+    elif Re == Rstar and beta == 0:
+        # This is GC = SN case and directly applies cos(iota) = 1
+        cosIota = 1
+        sinIota = 0
+    elif np.abs(cosIota) - 1 <= tolerance:
+        # This is not GC = SN case but would be very close.
+        # We firstly check if the cos(iota) is within the tolerance range.
+        # If so, then we consider it is GC ~ SN
         cosIota = 1
         sinIota = 0
     else:
-        # cosIota is not only outside the valid range but also untolerable
-        raise print('cosIota value is outside the tolarance range, please check again')
+        # cos(iota) is outside the tolerance range
+        warnings.warn('The inputs resulted cos(iota) outsides the tolerance range.', ToleranceWarning)
+        sinIota = np.sqrt(cosIota**2 - 1)
     # r'^2
     rp2 = ell2*cosIota**2 + (np.sqrt(ell2)*sinIota - h*np.sin(phi))**2 + h**2*np.cos(phi)**2
-    return np.sqrt(rp2),cosIota
+    return np.sqrt(rp2)
 
+
+# %% Calculate l.o.s d for a given time
+def get_d(t,vx,Rstar,theta):
+    """
+    Calculate the distance l.o.s d
     
-
-if __name__ == '__main__':
-   D = 11
-   Rstar = 8.5
-   Re = 8.5
-   theta = 0.01*np.pi
-   phi = 1
-   beta = 0
-   print(d(D,Rstar,theta))
-   print(sanityCheck(d(D,Rstar,theta),D,theta))
-   print(ell(Rstar,Re,theta,beta))
-   print((Re- d(D,Rstar,theta)*np.cos(theta)))
-   print(rPrime(D,Rstar,Re,theta,phi,beta))
+    Input
+    ------
+    t: the arrival time of BDM at Earth relative to the first SN neutrino on the Earth
+    vx: BDM velocity in the unit of light speed
+    Rstar: the distance between Earth and SN
+    theta: the open-angle in rad
+    
+    Output
+    ------
+    d: the l.o.s
+    """
+    zeta = Rstar + light_speed*t/kpc2cm
+    cosTheta = np.cos(theta)
+    d = (zeta - Rstar*vx*cosTheta - np.sqrt((Rstar**2 - zeta**2)*(1 - vx**2) + (Rstar*vx*cosTheta - zeta)**2))*vx/(1-vx**2)
+    return d
