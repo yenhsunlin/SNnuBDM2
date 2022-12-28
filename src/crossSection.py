@@ -160,8 +160,10 @@ def get_Ev_cosPhi(Tx,mx,psi,max_Ev = 1000):
 
 
 # %% Differential Nu-DM scattering cross section
+"""
 def diffCrossSectionNuDM(psi,Tx,mx,mV,gV,gD,max_Ev = 2000):
-    """
+    
+    # following is the docstring
     Lab-frame differential cross section for neutrino-DM scattering
     
     Input
@@ -177,7 +179,8 @@ def diffCrossSectionNuDM(psi,Tx,mx,mV,gV,gD,max_Ev = 2000):
     Output
     ------
     nu-DM diff. cross section: Lab-frame with unit 1/cm^2 * 1/rad
-    """
+    # above is the docstring
+    
     # Get the corresponding Ev and cos(phi)
     Ev,cosPhi,flag,msg = get_Ev_cosPhi(Tx,mx,psi,max_Ev = max_Ev)
     
@@ -206,6 +209,39 @@ def diffCrossSectionNuDM(psi,Tx,mx,mV,gV,gD,max_Ev = 2000):
         # Try to increase it
         warnings.warn(f'Ev might be outsdie max_Ev = {max_Ev}, try to increase the value and do again',OutOfBoundWarning)
         return 0
+"""
+    
+
+def diffCrossSectionNuDM(cosPhi,Ev,mx,mV,gV,gD):
+    """
+    Lab-frame differential cross section for neutrino-DM scattering
+    
+    Input
+    ------
+    cosPhi: the cos(phi) where phi is the neutrino scattering angle
+    Ev: the initial neutrino energy
+    mx: DM mass in MeV
+    mV: mediator mass in MeV
+    gV: the nu-DM coupling constant
+    gD: the DM-DM coupling constant
+    
+    Output
+    ------
+    nu-DM diff. cross section: Lab-frame with unit 1/cm^2 * 1/rad
+    """ 
+    # Get the neutrino energy after scattering
+    Ev_prime = Ev*mx/(mx + Ev*(1 - cosPhi))
+        
+    # The Mandelstam variables
+    s = 2*Ev*mx + mx**2
+    t = -2*Ev*Ev_prime*(1 - cosPhi)
+        
+    # The scattering amplitude squared
+    amp = scatteringAmplitudeSquared(s,t,0,mx,mV)
+        
+    # The lab-frame differential cross section
+    diffCrox = (1/32/np.pi)/(mx + Ev*(1 - cosPhi))**2*amp*(gV*gD)**2*to_cm2
+    return diffCrox
 
 
 # %% Frame-independent differential DM-e scattering cross section
@@ -289,6 +325,6 @@ def totalCrossSectionElectronDM(Tx,mx,mV,eps,gD):
     e2 = 4*np.pi/137
     
     # Evaluating cross section
-    dsdt = lambdadiffCrossSectionNuDM t: diffCrossSectionElectronDM(s,t,mx,mV)*to_cm2*(eps*gD)**2*e2
+    dsdt = lambda t: diffCrossSectionElectronDM(s,t,mx,mV)*to_cm2*(eps*gD)**2*e2
     totCrox,_ = quad(dsdt,tm,tp)
     return totCrox
