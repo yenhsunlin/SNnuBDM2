@@ -37,7 +37,7 @@ def scatteringAmplitudeSquared(s,t,m1,m2,mV):
 
 
 # %% BDM momentum
-def getBDMp(Tx,mx):
+def get_BDMp(Tx,mx):
     """
     Get the BDM momentum, please do check if the inputs meet the
     physical requirements
@@ -55,7 +55,7 @@ def getBDMp(Tx,mx):
 
 
 # %% BDM velocity
-def getBDMv(Tx,mx):
+def get_BDMv(Tx,mx):
     """
     The BDM velocity in the unit of light speed
     
@@ -72,7 +72,7 @@ def getBDMv(Tx,mx):
 
 
 # %% Get the cosine value of the neutrino scattering angle phi
-def getCosPhi(Ev,Tx,mx,psi):
+def get_cosPhi(Ev,Tx,mx,psi):
     """
     Get the cos(phi) where phi is the neutrino scattering angle,
     please do check if the inputs meet the physical requirements
@@ -88,21 +88,21 @@ def getCosPhi(Ev,Tx,mx,psi):
     ------
     cos(phi): the cosine value of the neutrino scattering phi
     """
-    return 1/np.sqrt(1 + np.sin(psi)**2/(Ev/getBDMp(Tx,mx) - np.cos(psi))**2)
+    return 1/np.sqrt(1 + np.sin(psi)**2/(Ev/get_BDMp(Tx,mx) - np.cos(psi))**2)
 
 
 # %% Get the neutrino energy after scattering
-def getEv_prime(Ev,Tx,mx,psi):
+def get_Ev_prime(Ev,Tx,mx,psi):
     """
     Neutrino energy after scattering, Ev_prime, please do check if the
     inputs meet the physical requirements
     """
-    return Ev*mx/(mx + Ev*(1 - getCosPhi(Ev,Tx,mx,psi)))
+    return Ev*mx/(mx + Ev*(1 - get_cosPhi(Ev,Tx,mx,psi)))
 
 
 # %% Get the required Ev and cos(phi) for BDM with kinetic energy Tx at scattering
 # angle psi
-def getEvCosPhi(Tx,mx,psi,max_Ev = 1000):
+def get_Ev_cosPhi(Tx,mx,psi,max_Ev = 1000):
     """
     Get the initial neutrino energy and scattering angle cos(phi) for
     a given (Tx,mx,psi). Additional \'flag\' and \'msg\' will be output
@@ -131,7 +131,7 @@ def getEvCosPhi(Tx,mx,psi,max_Ev = 1000):
     """
     # Equation for getting Tx
     def _Tx(Ev):
-        return Ev - getEv_prime(Ev,Tx,mx,psi)
+        return Ev - get_Ev_prime(Ev,Tx,mx,psi)
     # Target function for root_scalar to find Ev -> Ev_prime - Ev = Tx
     def _f(Ev):
         return _Tx(Ev) - Tx
@@ -139,7 +139,7 @@ def getEvCosPhi(Tx,mx,psi,max_Ev = 1000):
     try:
         Ev = root_scalar(_f, bracket=[0, max_Ev], method='brentq').root
         # Get phi via arccos instead of arctan to aviod minus phi 
-        cosPhi = getCosPhi(Ev,Tx,mx,psi)
+        cosPhi = get_cosPhi(Ev,Tx,mx,psi)
         # Check the energy-momentum conservation
         if np.sqrt(1 - cosPhi**2)/cosPhi >= 0:
             # pass!
@@ -179,14 +179,14 @@ def diffCrossSectionNuDM(psi,Tx,mx,mV,gV,gD,max_Ev = 2000):
     nu-DM diff. cross section: Lab-frame with unit 1/cm^2 * 1/rad
     """
     # Get the corresponding Ev and cos(phi)
-    Ev,cosPhi,flag,msg = getEvCosPhi(Tx,mx,psi,max_Ev = max_Ev)
+    Ev,cosPhi,flag,msg = get_Ev_cosPhi(Tx,mx,psi,max_Ev = max_Ev)
     
     # Check if the inputs are physical
     if msg == 1:
         # The inputs resulted physical consequence
         
         # Get the neutrino energy after scattering
-        Ev_prime = getEv_prime(Ev,Tx,mx,psi)
+        Ev_prime = get_Ev_prime(Ev,Tx,mx,psi)
         
         # The Mandelstam variables
         s = 2*Ev*mx + mx**2
@@ -289,6 +289,6 @@ def totalCrossSectionElectronDM(Tx,mx,mV,eps,gD):
     e2 = 4*np.pi/137
     
     # Evaluating cross section
-    dsdt = lambda t: diffCrossSectionElectronDM(s,t,mx,mV)*to_cm2*(eps*gD)**2*e2
+    dsdt = lambdadiffCrossSectionNuDM t: diffCrossSectionElectronDM(s,t,mx,mV)*to_cm2*(eps*gD)**2*e2
     totCrox,_ = quad(dsdt,tm,tp)
     return totCrox
