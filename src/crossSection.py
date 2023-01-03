@@ -72,7 +72,7 @@ def get_BDMv(Tx,mx):
 
 
 # %% Get the cosine value of the neutrino scattering angle phi
-def get_cosPhi(Ev,Tx,mx,psi):
+def get_cosPhi(Ev,Tx,mx,cosPsi):
     """
     Get the cos(phi) where phi is the neutrino scattering angle,
     please do check if the inputs meet the physical requirements
@@ -82,27 +82,31 @@ def get_cosPhi(Ev,Tx,mx,psi):
     Ev: the initial neutrino energy
     Tx: the BDM kinetic energy
     mx: the DM mass
-    psi: the DM scattering angle
+    cosPsi: the cosine value of DM scattering angle, cos(psi)
     
     Output
     ------
     cos(phi): the cosine value of the neutrino scattering phi
     """
-    return 1/np.sqrt(1 + np.sin(psi)**2/(Ev/get_BDMp(Tx,mx) - np.cos(psi))**2)
+    if cosPsi > 1:
+        cosPsi = 1
+    else: pass
+    sinPsiSquared = 1 - cosPsi**2
+    return 1/np.sqrt(1 + sinPsiSquared/(Ev/get_BDMp(Tx,mx) - cosPsi)**2)
 
 
 # %% Get the neutrino energy after scattering
-def get_Ev_prime(Ev,Tx,mx,psi):
+def get_Ev_prime(Ev,Tx,mx,cosPsi):
     """
     Neutrino energy after scattering, Ev_prime, please do check if the
     inputs meet the physical requirements
     """
-    return Ev*mx/(mx + Ev*(1 - get_cosPhi(Ev,Tx,mx,psi)))
+    return Ev*mx/(mx + Ev*(1 - get_cosPhi(Ev,Tx,mx,cosPsi)))
 
 
 # %% Get the required Ev and cos(phi) for BDM with kinetic energy Tx at scattering
 # angle psi
-def get_Ev_cosPhi(Tx,mx,psi,max_Ev = 1000):
+def get_Ev_cosPhi(Tx,mx,cosPsi,max_Ev = 1000):
     """
     Get the initial neutrino energy and scattering angle cos(phi) for
     a given (Tx,mx,psi). Additional \'flag\' and \'msg\' will be output
@@ -112,8 +116,7 @@ def get_Ev_cosPhi(Tx,mx,psi,max_Ev = 1000):
     ------
     Tx: BDM kinetic energy
     mx: DM mass
-    psi: the DM scattering angle, according to the scheme, it should
-    be negative (below the horizon)
+    cosPsi: the cosine value of DM scattering angle, cos(psi)
     max_Ev: Maximum Ev to be searched for the solution of the algorithm
     
     Output
@@ -131,7 +134,7 @@ def get_Ev_cosPhi(Tx,mx,psi,max_Ev = 1000):
     """
     # Equation for getting Tx
     def _Tx(Ev):
-        return Ev - get_Ev_prime(Ev,Tx,mx,psi)
+        return Ev - get_Ev_prime(Ev,Tx,mx,cosPsi)
     # Target function for root_scalar to find Ev -> Ev_prime - Ev = Tx
     def _f(Ev):
         return _Tx(Ev) - Tx
@@ -139,7 +142,7 @@ def get_Ev_cosPhi(Tx,mx,psi,max_Ev = 1000):
     try:
         Ev = root_scalar(_f, bracket=[0, max_Ev], method='brentq').root
         # Get phi via arccos instead of arctan to aviod minus phi 
-        cosPhi = get_cosPhi(Ev,Tx,mx,psi)
+        cosPhi = get_cosPhi(Ev,Tx,mx,cosPsi)
         # Check the energy-momentum conservation
         if np.sqrt(1 - cosPhi**2)/cosPhi >= 0:
             # pass!
