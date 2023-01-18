@@ -44,6 +44,9 @@ def get_cosPsi(d,Rstar,theta):
     D = np.sqrt(D2)
     # Get cos(alpha)
     cosPsi = (Rstar**2 - D2 - d**2)/(2*D*d)
+    if cosPsi > 1: cosPsi = 1
+    elif cosPsi < -1: cosPsi = -1
+    else: pass
     return cosPsi
 
 

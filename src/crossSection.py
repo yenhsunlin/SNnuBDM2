@@ -88,9 +88,6 @@ def get_cosPhi(Ev,Tx,mx,cosPsi):
     ------
     cos(phi): the cosine value of the neutrino scattering phi
     """
-    if cosPsi > 1:
-        cosPsi = 1
-    else: pass
     sinPsiSquared = 1 - cosPsi**2
     return 1/np.sqrt(1 + sinPsiSquared/(Ev/get_BDMp(Tx,mx) - cosPsi)**2)
 
@@ -144,7 +141,7 @@ def get_Ev_cosPhi(Tx,mx,cosPsi,max_Ev = 1000):
         # Get phi via arccos instead of arctan to aviod minus phi 
         cosPhi = get_cosPhi(Ev,Tx,mx,cosPsi)
         # Check the energy-momentum conservation
-        if np.sqrt(1 - cosPhi**2)/cosPhi >= 0:
+        if np.sqrt(1 - cosPhi**2)/cosPhi >= 0 and ~np.isnan(cosPhi):
             # pass!
             flag = 'valid'
             msg = 1
@@ -243,7 +240,7 @@ def diffCrossSectionNuDM(cosPhi,Ev,mx,mV,gV,gD):
     amp = scatteringAmplitudeSquared(s,t,0,mx,mV)
         
     # The lab-frame differential cross section
-    diffCrox = (1/32/np.pi)/(mx + Ev*(1 - cosPhi))**2*amp*(gV*gD)**2*to_cm2
+    diffCrox = amp*(gV*gD)**2*to_cm2*(1/32/np.pi)/(mx + Ev*(1 - cosPhi))**2
     return diffCrox
 
 
