@@ -13,16 +13,16 @@
 
 import numpy as np
 from constants import *
-import warnings
+#import warnings
 
 
 # %% User-derined warning
-class ToleranceWarning(UserWarning):
-    pass
+#class ToleranceWarning(UserWarning):
+#    pass
 
 
 # %% Get the scattering angle alpha
-def get_cosPsi(d,Rstar,theta):
+def getCosPsi(d,Rstar,theta):
     """
     Get the cosine value of scattering angle cos(psi).
     If we did it with law of cosine, then for the case of psi > pi/2,
@@ -40,7 +40,7 @@ def get_cosPsi(d,Rstar,theta):
     psi: scattering angle in rad
     """
     # Get D^2
-    D2 = get_D(d,Rstar,theta,True)
+    D2 = getD(d,Rstar,theta,True)
     D = np.sqrt(D2)
     # Get cos(alpha)
     cosPsi = (Rstar**2 - D2 - d**2)/(2*D*d)
@@ -51,7 +51,7 @@ def get_cosPsi(d,Rstar,theta):
 
 
 # %% Calculate D
-def get_D(d,Rstar,theta,is_square = False):
+def getD(d,Rstar,theta,is_square = False):
     """
     Calculate the distance between SN and boosted point D
     
@@ -77,7 +77,7 @@ def get_D(d,Rstar,theta,is_square = False):
     
 
 # %% Calculate ell
-def get_ell(d,Re,theta,beta,is_square = False):
+def getEll(d,Re,theta,beta,is_square = False):
     """
     Calculate the distance ell
     
@@ -104,7 +104,7 @@ def get_ell(d,Re,theta,beta,is_square = False):
 
 
 # %% Calculate r'
-def get_rprime(d,Rstar,Re,theta,phi,beta,tolerance = 1e-10):
+def getRprime(d,Rstar,Re,theta,phi,beta,tolerance = 1e-10):
     """
     Calculate the distance from boosted point to GC r'
     
@@ -122,38 +122,44 @@ def get_rprime(d,Rstar,Re,theta,phi,beta,tolerance = 1e-10):
     r': the distance r'
     """
     # ell^2
-    ell2 = get_ell(d,Re,theta,beta,True)
+    ell2 = getEll(d,Re,theta,beta,True)
     # D^2
-    D2 = get_D(d,Rstar,theta,True)
+    D2 = getD(d,Rstar,theta,True)
     # h
     h = d*np.sin(theta)
     # cos(iota) and iota
     cosIota = (Re**2 - ell2 - (d*np.cos(theta))**2)/(2*np.cos(theta)*np.sqrt(ell2)*d)
     # Using sin(arccos(x)) = sqrt(1-x^2)
-    if 0 <= np.abs(cosIota) <= 1:
+    if cosIota > 1: cosIota = 1
+    elif cosIota < -1: cosIota = -1
+    else: pass
+    sinIota = np.sqrt(1 - cosIota**2)
+    
+    #if 0 <= np.abs(cosIota) <= 1:
         # normal case
-        sinIota = np.sqrt(1 - cosIota**2)
-    elif Re == Rstar and beta == 0:
+    #    sinIota = np.sqrt(1 - cosIota**2)
+    #elif Re == Rstar and beta == 0:
         # This is GC = SN case and directly applies cos(iota) = 1
-        cosIota = 1
-        sinIota = 0
-    elif np.abs(cosIota) - 1 <= tolerance:
+    #    cosIota = 1
+    #    sinIota = 0
+    #elif np.abs(cosIota) - 1 <= tolerance:
         # This is not GC = SN case but would be very close.
         # We firstly check if the cos(iota) is within the tolerance range.
         # If so, then we consider it is GC ~ SN
-        cosIota = 1
-        sinIota = 0
-    else:
+    #    cosIota = 1
+    #    sinIota = 0
+    #else:
         # cos(iota) is outside the tolerance range
-        warnings.warn('The inputs resulted cos(iota) outsides the tolerance range.', ToleranceWarning)
-        sinIota = np.sqrt(cosIota**2 - 1)
+    #    warnings.warn('The inputs resulted cos(iota) outsides the tolerance range.', ToleranceWarning)
+    #    sinIota = np.sqrt(cosIota**2 - 1)
+    
     # r'^2
     rp2 = ell2*cosIota**2 + (np.sqrt(ell2)*sinIota - h*np.sin(phi))**2 + h**2*np.cos(phi)**2
     return np.sqrt(rp2)
 
 
 # %% Calculate l.o.s d for a given time
-def get_d(t,vx,Rstar,theta):
+def getd(t,vx,Rstar,theta):
     """
     Calculate the distance l.o.s d
     

@@ -1,4 +1,5 @@
 # Global constants
+from numpy import pi
 # light speed in cm/s
 light_speed = 29979245800
 # kpc to cm
@@ -21,3 +22,7 @@ mmu = 105.658
 g2MeV = 1/(1.783e-27)
 # 1/MeV^2 to cm^2
 to_cm2 = (1.973e-11)**2
+# Fine structure constant for EM interaction
+alphaEM = 1/137
+# Electric charge squared
+eSquared = 4*pi*alphaEM
