@@ -1,6 +1,18 @@
+# -*- coding: utf-8 -*-
+"""
+*-------- Rules for placing variables in a function --------*
+
+1. Variable prior to constant
+2. Distance prior to angle
+3. SNv propagation distance D has lower priority than other variable distance
+4. Open-angle (theta) is prior to azimuth angle (phi)
+5. Off-center angle (beta) is considered as a constant as it does not subjec to
+   change when it is assigned in the beginning
+
+"""
+
 import numpy as np
 from scipy.integrate import quad
-from scipy.optimize import root_scalar
 from constants import *
 
 
@@ -135,15 +147,36 @@ def maxPsi(Tx,mx):
     
     Input
     ------
-    mx: Mass of DM
     Tx: BDM kinetic energy
+    mx: Mass of DM
     
     Output
     ------
-    psi: maximum psi allowed to have physical Ev, in rad
+    psi_max: maximum psi, in rad
     """
     maxCosValue = np.sqrt(Tx/(Tx + 2*mx))
     return np.arccos(maxCosValue)
+
+
+# %% Maximum open angle theta allowed for a given DM mass and Tx
+def maxtheta(Tx,mx,D,Rstar):
+    """
+    Get the maximum open angle theta that results in non-zero BDM flux
+    
+    Input
+    ------
+    Tx: BDM kinetic energy
+    mx: Mass of DM
+    D: Distance from boosted point to the SN explosion site, kpc
+    Rstar: Distance from SN to the Earth, kpc
+    
+    Output
+    ------
+    theta_max: maximum theta, rad
+    """
+    psiM = maxPsi(Tx,mx)
+    thetaM = np.arcsin(D*np.sin(psiM)/Rstar)
+    return thetaM
 
 
 # %% Calculate the differential cross section for nu-DM scattering

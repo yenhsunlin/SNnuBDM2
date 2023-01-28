@@ -174,7 +174,7 @@ def getd(t,vx,Rstar,theta):
     ------
     d: the l.o.s
     """
-    zeta = Rstar + light_speed*t/kpc2cm
+    zeta = Rstar + lightSpeed*t/kpc2cm
     cosTheta = np.cos(theta)
     d = (zeta - Rstar*vx*cosTheta - np.sqrt((Rstar**2 - zeta**2)*(1 - vx**2) + (Rstar*vx*cosTheta - zeta)**2))*vx/(1-vx**2)
     return d
