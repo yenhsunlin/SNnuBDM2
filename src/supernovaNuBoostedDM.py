@@ -91,7 +91,7 @@ def getEll(d,Re,theta,beta,is_square = False):
 
 
 # %% Calculate r'
-def getRprime(d,Rstar,Re,theta,phi,beta,tolerance = 1e-10):
+def getRprime(d,Rstar,Re,theta,phi,beta):
     """
     Calculate the distance from boosted point to GC r'
     
