@@ -111,7 +111,7 @@ def getRprime(d,Rstar,Re,theta,phi,beta):
     # ell^2
     ell2 = getEll(d,Re,theta,beta,True)
     # D^2
-    D2 = getD(d,Rstar,theta,True)
+    #D2 = getD(d,Rstar,theta,True)
     # h
     h = d*np.sin(theta)
     
