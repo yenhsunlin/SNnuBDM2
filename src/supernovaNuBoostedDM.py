@@ -26,14 +26,22 @@ def getCosPsi(d,Rstar,theta):
     ------
     psi: scattering angle in rad
     """
+    
     # Get D^2
     D2 = getD(d,Rstar,theta,True)
     D = np.sqrt(D2)
-    # Get cos(alpha)
-    cosPsi = (Rstar**2 - D2 - d**2)/(2*D*d)
-    if cosPsi > 1: cosPsi = 1
-    elif cosPsi < -1: cosPsi = -1
-    else: pass
+    # Get cos(psi)
+    denominator = 2*D*d # check if the denominator in the law of cosine is not 0.0
+    if denominator != 0.0:
+        numerator = Rstar**2 - D2 - d**2
+        cosPsi = numerator/denominator
+        # Dealing with round-off error
+        if cosPsi > 1: cosPsi = 1
+        elif cosPsi < -1: cosPsi = -1
+        else: pass
+    else:
+        # the denominator is 0.0, which means d = 0, applying L'Hospital's rule to get cos(psi)
+        cosPsi = 0.0
     return cosPsi
 
 
@@ -55,6 +63,10 @@ def getD(d,Rstar,theta,is_square = False):
     """
     # Calculate D^2 via law of cosine
     D2 = d**2 + Rstar**2 - 2*d*Rstar*np.cos(theta)
+    # D2 might turn minus due to round-off error, it shoud truncate at 0
+    if D2 < 0: D2 = 0
+    else: pass
+    
     if is_square is False:
         return np.sqrt(D2)
     elif is_square is True:
@@ -82,6 +94,10 @@ def getEll(d,Re,theta,beta,is_square = False):
     """
     # Calculate ell^2 via law of cosine
     ell2 = Re**2 + (d*np.cos(theta))**2 - 2*Re*d*np.cos(theta)*np.cos(beta)
+    # ell2 might turn minus due to round-off error, it should truncate at 0
+    if ell2 < 0: ell2 = 0.0
+    else: pass
+    
     if is_square is False:
         return np.sqrt(ell2)
     elif is_square is True:
@@ -91,14 +107,13 @@ def getEll(d,Re,theta,beta,is_square = False):
 
 
 # %% Calculate r'
-def getRprime(d,Rstar,Re,theta,phi,beta):
+def getRprime(d,Re,theta,phi,beta):
     """
     Calculate the distance from boosted point to GC r'
     
     Input
     ------
     d: the l.o.s distance d
-    Rstar: the distance between Earth and SN
     Re: the distance between Earth and the GC
     theta: the open-angle in rad
     phi: the azimuth angle in rad
@@ -110,20 +125,22 @@ def getRprime(d,Rstar,Re,theta,phi,beta):
     """
     # ell^2
     ell2 = getEll(d,Re,theta,beta,True)
-    # D^2
-    #D2 = getD(d,Rstar,theta,True)
     # h
     h = d*np.sin(theta)
     
     # Calculate cos(iota) and iota
-    cosIota = (Re**2 - ell2 - (d*np.cos(theta))**2)/(2*np.cos(theta)*np.sqrt(ell2)*d)
-    # Using sin(arccos(x)) = sqrt(1-x^2)
-    if cosIota > 1:
-        cosIota = 1
-    elif cosIota < -1:
-        cosIota = -1
+    denominator = 2*np.cos(theta)*np.sqrt(ell2)*d # check if the denomator in the law of cosine is not 0.0
+    if denominator != 0.0:
+        numerator = Re**2 - ell2 - (d*np.cos(theta))**2
+        cosIota = numerator/denominator
+        # Dealing with round-off error
+        if cosIota > 1: cosIota = 1
+        elif cosIota < -1: cosIota = -1
+        else: pass
     else:
-        pass
+        # the denominator is 0, which means d = 0, applying L'Hospital to get cos(iota)
+        cosIota = 0
+    # Using sin(arccos(x)) = sqrt(1-x^2)
     sinIota = np.sqrt(1 - cosIota**2)
     
     # Calculate r'^2
@@ -149,8 +166,12 @@ def getd(t,vx,Rstar,theta):
     """
     zeta = Rstar + lightSpeed*t/kpc2cm
     cosTheta = np.cos(theta)
-    d = (zeta - Rstar*vx*cosTheta - np.sqrt((Rstar**2 - zeta**2)*(1 - vx**2) + (Rstar*vx*cosTheta - zeta)**2))*vx/(1-vx**2)
-    return d
+    denominator = 1-vx**2
+    if denominator != 0.0:
+        numerator = (zeta - Rstar*vx*cosTheta - np.sqrt((Rstar**2 - zeta**2)*(1 - vx**2) + (Rstar*vx*cosTheta - zeta)**2))*vx
+        return numerator/denominator
+    else:
+        return 0.0
 
 
 # %% ---------- Functions for evaluating kinematical relations ---------- %% #
