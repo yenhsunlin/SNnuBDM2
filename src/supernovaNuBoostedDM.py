@@ -416,3 +416,175 @@ def totalCrossSectionDMe(Tx,mx,mV,eps,gD):
     # Evaluating the integral \int dt*d\sigma/dt
     totCrox,_ = quad(_dsig,tm,tp)
     return totCrox*(gD*eps)**2**eSquared/64/np.pi/s/pSq
+
+
+# %% ---------- Functions for evaluating BDM flux and event ---------- %% #
+
+# %% Neutrino number density at distance D
+def dnv(D,Ev,Lv = Lv,tau = 10):
+    """
+    Neutrino number density per energy at D
+    
+    Input
+    ------
+    Enu: Neutrino energy in MeV
+    D: Distance from the boosted point to the SN explosion site, in kpc
+    Lv: Neutrino luminosity, default is 1e52 erg/s
+    tau: duration of the SN explosion
+    
+    Output
+    ------
+    Neutrino flux at d: # per Enu per cm**3
+    """
+    Lv = Lv*erg2MeV*tau
+    D = D*kpc2cm
+    
+    # Fermi dirac distribution
+    def _fv(Ev,Tv):
+        exponent = Ev/Tv - 3
+        if exponent <= 700:
+            return (1/18.9686)*Tv**(-3)*(Ev**2/(np.exp(exponent) + 1))
+        else:
+            return 0
+    nue_dist = _fv(Ev,2.76)/11
+    nueb_dist = _fv(Ev,4.01)/16
+    # total 4 species for x
+    nux_dist = _fv(Ev,6.26)/25
+    
+    luminosity = Lv/(4*np.pi*D**2*lightSpeed)
+    return luminosity*(nue_dist+nueb_dist+4*nux_dist)
+
+
+# %% NFW DM number density
+def nx(r,mx):
+    """
+    DM halo number density at r in MW
+    
+    Input
+    ------
+    r: distance to GC, in kpc
+    mx: DM mass in MeV
+    
+    Output
+    ------
+    DM number density, #/cm^3 at r
+    """
+    rr=r/24.42
+    return (184/mx)/(rr*(1 + rr)**2)
+
+
+# %% BDM emissivity at the direction of psi
+def getJx(Tx,mx,mV,r,D,psi,gV=1,gD=1,tau=10):
+    """
+    Evaluate the BDM emissivity toward the direction psi at the given boosted point 
+    
+    Input
+    ------
+    Tx: BDM kinetic energy, MeV
+    mx: DM mass, MeV
+    mV: mediator mass, MeV
+    r: distance from boosted point to GC for calculating DM number density, kpc
+    D: distance from boosted point to the SN explosion site, kpc
+    psi: the BDM scattering angle, rad
+    gV: DM-neutrino coupling constant, default 1
+    gD: DM-DM coupling constant, default 1
+    
+    Output
+    ------
+    jx: BDM emissivity at the boosted point, 1/(MeV*cm^3*s*rad)
+    """   
+    # Get the required Ev
+    Ev = getEv(Tx,mx,psi)
+    # Get dEv/dTx
+    dEvdTx = dEv(Tx,mx,psi) 
+    # Get the differential DM-nu scattering cross section
+    diffCrox = diffCrossSectionNuDM(Tx,mx,mV,psi,gV,gD)
+    # Get the emissivity jx
+    jx = lightSpeed*diffCrox*nx(r,mx)*dnv(D,Ev,Lv,tau)*dEvdTx
+    return jx
+
+
+# %% Differential BDM flux at Earth
+def diffFluxAtEarth(t,Tx,mx,mV,Rstar,theta,phi,beta,Re=8.5,r_cut=1e-5,gV=1,gD=1,tau=10):
+    """
+    The differential BDM flux over open angle theta at Earth
+    
+    Input
+    ------
+    t: The differential BDM flux at time t, relative to the first SN neutrino
+        arriving at Earth
+    Tx: BDM kinetic energy, MeV
+    mx: DM mass, MeV
+    mV: Mediator mass, MeV
+    Rstar: Distance from Earth to SN, kpc
+    theta: The open angle theta
+    phi: The azimuthal angle along the Earth-SN axis, rad
+    beta: The deviation angle, characterizing how SN deviates the GC, rad
+    Re: The distance from Earth to GC, default 8.5 kpc
+    r_cut: Ignore the BDM contribution when r' < r_cut, default 1e-5 kpc
+    gV: DM-neutrino coupling constant, default 1
+    gD: DM-DM coupling constant, default 1
+    tau: The duration of SN explosion, default 10 s
+    
+    Output
+    ------
+    scalar: The diff. BDM flux at Earth, # per MeV per cm^2 per second per sr
+    """
+    # Get BDM velocity
+    vx = getVelocity(Tx,mx)
+    # Get the propagation length of BDM via given t and vx
+    d = getd(t,vx,Rstar,theta)
+    # Get the required SNv propagation length
+    D = getD(d,Rstar,theta)
+    # Get the distance between boosted point to GC
+    rprime = getRprime(d,Re,theta,phi,beta)
+    if  D != 0.0 and ~np.isnan(rprime) and rprime >= r_cut:
+        # Get the BDM scattering angle psi
+        psi = np.arccos(getCosPsi(d,Rstar,theta))
+        # Evaluate the xemissivity
+        jx = getJx(Tx,mx,mV,rprime,D,psi,gV,gD,tau)
+        # Jacobian
+        J = lightSpeed/((d - Rstar*np.cos(theta))/D + 1/vx)
+        # BDM flux
+        return J*jx*vx*np.sin(theta)
+    else:
+        return 0
+
+
+# %% Differential BDM event rate in the detector
+def diffEventRateAtDetector(t,Tx,mx,mV,Rstar,theta,phi,beta,Re=8.5,r_cut=1e-5,gV=1,gD=1,eps=1,tau=10):
+    """
+    Calculate the differential event rate at the detector, the unit is:
+    # per second per MeV per sr per electron
+    To obtain the total event one should integrate this function over time, Tx,
+    steradian and electron number in the given detector
+    
+    Input
+    ------
+    t: The differential BDM flux at time t, relative to the first SN neutrino
+        arriving at Earth
+    Tx: BDM kinetic energy, MeV
+    mx: DM mass, MeV
+    mV: Mediator mass, MeV
+    Rstar: Distance from Earth to SN, kpc
+    theta: The open angle theta
+    phi: The azimuthal angle along the Earth-SN axis, rad
+    beta: The deviation angle, characterizing how SN deviates the GC, rad
+    Re: The distance from Earth to GC, default 8.5 kpc
+    r_cut: Ignore the BDM contribution when r' < r_cut, default 1e-5 kpc
+    gV: DM-neutrino coupling constant, default 1
+    gD: DM-DM coupling constant, default 1
+    eps: DM-electron coupling constant, default 1
+    tau: The duration of SN explosion, default 10 s
+    
+    Output
+    ------
+    scalar: The differential event rate
+    """
+    # The BDM flux at Earth
+    diffFlux = diffFluxAtEarth(t,Tx,mx,mV,Rstar,theta,phi,beta,Re,r_cut,gV,gD,tau)
+    # The DM-e cross section
+    croxDMe = totalCrossSectionDMe(Tx,mx,mV,eps,gD)
+    # The differential event rate
+    diffEvent = diffFlux*croxDMe
+    return diffEvent
