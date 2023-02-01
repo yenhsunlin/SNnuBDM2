@@ -97,7 +97,7 @@ def getEll(d,Re,theta,beta,is_square = False):
     # ell2 might turn minus due to round-off error, it should truncate at 0
     if ell2 < 0: ell2 = 0.0
     else: pass
-    
+
     if is_square is False:
         return np.sqrt(ell2)
     elif is_square is True:
@@ -416,6 +416,29 @@ def totalCrossSectionDMe(Tx,mx,mV,eps,gD):
     # Evaluating the integral \int dt*d\sigma/dt
     totCrox,_ = quad(_dsig,tm,tp)
     return totCrox*(gD*eps)**2**eSquared/64/np.pi/s/pSq
+
+
+# Kinetic mixing from mu/tau loops
+def epsPrime(q,gV):
+    """
+    Get the epsilon induced by mu/tau loops
+    
+    Input
+    ------
+    q: the momentum transfer, in MeV
+    gV: the DM-lepton coupling constant
+    
+    Output
+    ------
+    scalar: the epsilon, dimensionless
+    """
+    # Define q^2. In this t-channel, q^2 is always spacelike
+    q2 = -q**2
+    # define the integrand
+    integ = lambda x: x*(1 - x)*np.log((mtau**2 - x*(1 - x)*q2)/(mmu**2 - x*(1 - x)*q2))*e*gV/2/np.pi**2
+    # evaluate epsilon
+    eps_prime,_ = quad(integ,0,1)
+    return -eps_prime
 
 
 # %% ---------- Functions for evaluating BDM flux and event ---------- %% #
