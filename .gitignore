@@ -1,1 +1,10 @@
 .ipynb_checkpoints
+src/.DS_Store
+.DS_Store
+*.jdl
+src/submitCluster/run0.py
+src/submitCluster/run1.py
+src/submitCluster/run2.py
+src/submitCluster/run3.py
+src/submitCluster/constants.py
+src/submitCluster/supernovaNuBoostedDM.py
