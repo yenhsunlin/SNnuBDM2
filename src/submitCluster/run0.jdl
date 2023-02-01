@@ -1,0 +1,29 @@
+universe 			= vanilla
+
+getEnv 				= True
+
+executable 			= /hetghome/yenhsun/anaconda3/bin/python 
+
+arguments 			= run0.py
+
+transfer_output 		= true
+
+transfer_error 			= true
+
+transfer_executable 		= true
+
+should_transfer_files 		= true
+
+transfer_input_files 		= run0.py,supernovaNuBoostedDM.py,constants.py
+
+when_to_transfer_output 	= ON_EXIT
+
+request_cpus 			= TotalCpus
+
+log                             = log/$(Cluster).condor.log
+
+output                          = log/$(Cluster).$(Process).stdout
+
+error                           = log/$(Cluster).$(Process).stderr
+
+queue 1
