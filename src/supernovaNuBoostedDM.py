@@ -1,5 +1,25 @@
 # -*- coding: utf-8 -*-
+__doc__ = """"""
+__author__ = "Yen-Hsun Lin (yenhsun@phys.ncku.edu.tw)"
+__date__ = "20230201"
+__version__ = "1.0"
+__all__ = (
+    # geometrical relations:
+    'get_tvan_thetaM',
+    # kinematics:
+    'getVelocity',
+    'getMomentum',
+    # cross sections and couplings:
+    'diffCrossSectionNuDM',
+    'totalCrossSectionDMe',
+    'epsPrime',
+    # differential flux and event rate:
+    'diffFluxAtEarth',
+    'diffEventRateAtDetector',
+)
 
+
+# %% --------------------------------------------------------------------- %% #
 import numpy as np
 from scipy.integrate import quad
 from scipy.optimize import root_scalar
