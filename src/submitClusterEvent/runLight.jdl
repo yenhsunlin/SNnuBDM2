@@ -4,7 +4,7 @@ getEnv 				= True
 
 executable 			= /hetghome/yenhsun/anaconda3/bin/python 
 
-arguments 			= calcEventRate.py
+arguments 			= calcEventRateLight.py
 
 transfer_output 		= true
 
@@ -14,7 +14,7 @@ transfer_executable 		= true
 
 should_transfer_files 		= true
 
-transfer_input_files 		= calcEventRate.py,supernovaNuBoostedDM.py,constants.py
+transfer_input_files 		= calcEventRateLight.py,supernovaNuBoostedDM.py,constants.py
 
 when_to_transfer_output 	= ON_EXIT
 

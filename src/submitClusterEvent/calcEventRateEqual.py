@@ -17,7 +17,7 @@ nitn = 10
 # How many evaluation numbers for vegas
 neval = 100000
 # The ratio r_m = mV/mx
-r_m = 1/3
+r_m = 1
 # Maximum exposure time
 texpMax = 35*yr2s
 # Min and max Tx in the integration
@@ -45,7 +45,7 @@ def eventRatePerElectron(mx,Rstar,beta,Re=8.5,t_cut=texpMax,r_cut=1e-05,gV=gV,gD
         Tx = x[1]
         theta = x[2]
         phi = x[3]
-        return diffEventRateAtDetector(t,Tx,mx,mV,Rstar,theta,phi,beta,Re,r_cut,gV,gD,eps,tau)
+        return diffEventRateAtDetector(t,Tx,mx,mV,Rstar,theta,phi,beta,Re,r_cut,gV,gD,eps,tau)*epsPrime(Tx,gV)
     
     # Time bound, Tx bound, theta bound, phi bound
     integrand = vegas.Integrator([[10,texp],[Tx_min,Tx_max],[0,thetaMax],[0,2*np.pi]])
@@ -76,7 +76,7 @@ if __name__ == '__main__':
             targetFuncForParallelization = partial(eventRatePerElectron,Rstar=Rstar,beta=Beta)
             eventRate = np.array(pool.map(targetFuncForParallelization,mx_list))
             eventRate = np.vstack((mx_list,eventRate.T))
-            np.savetxt(savePath + f'eventPerElectron_Rs{Rstar:.2f}_beta{beta:.2f}.txt',
+            np.savetxt(savePath + f'eventPerElectron_equalMv_noEps_Rs{Rstar:.2f}_beta{beta:.2f}.txt',
                        eventRate.T,fmt='%.5e  %.5e  %d',header='mx         event         exit_code')
             #print(f'{i} out of 9 runs are completed',end='\r')
             #i+=1
