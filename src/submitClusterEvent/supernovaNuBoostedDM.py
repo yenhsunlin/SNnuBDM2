@@ -405,7 +405,7 @@ def kallenLambda(x,y,z):
 
 
 # %% Calculate the total DM-electron scattering cross section
-def totalCrossSectionDMe(Tx,mx,mV,eps,gD):
+def totalCrossSectionDMe(Tx,mx,mV,eps,gD,gV=1,is_eps_0=False):
     """
     Get the total DM-electron scattering cross section
     
@@ -416,6 +416,11 @@ def totalCrossSectionDMe(Tx,mx,mV,eps,gD):
     mV: Mediator mass
     eps: The coupling strength for V-e-e vertex
     gD: The coupling strength for V-DM-DM vertex
+    gV: If is_eps_0 is True, then we need gV to determine the
+        induced kinetic mixing parameter epsilon from mu/tau-loop
+    is_eps_0: Should we turn off the kinetic mixing and use the
+        kinetic mixing induced by mu/tau-loop, default False.
+        If this is set True, then the variable eps will not work
     
     Output
     ------
@@ -428,14 +433,20 @@ def totalCrossSectionDMe(Tx,mx,mV,eps,gD):
     # Define the d\sigma/dt
     def _dsig(t):
         u = 2*(mx**2 + me**2) - s - t
-        return to_cm2*amplitudeSquared(s,t,u,mx,me,mV)
+        if is_eps_0:
+            return to_cm2*amplitudeSquared(s,t,u,mx,me,mV)*epsPrime(t,gV)**2
+        else:
+            return to_cm2*amplitudeSquared(s,t,u,mx,me,mV)
     
     # Define the integration range
     tm = 2*mx**2 - 2*(ExSq + pSq)
     tp = 2*mx**2 - 2*(ExSq - pSq)
     # Evaluating the integral \int dt*d\sigma/dt
     totCrox,_ = quad(_dsig,tm,tp)
-    return totCrox*(gD*eps)**2**eSquared/64/np.pi/s/pSq
+    if is_eps_0:
+        return totCrox*(gD*eps)**2**eSquared/64/np.pi/s/pSq
+    else:
+        return totCrox*gD**2**eSquared/64/np.pi/s/pSq
 
 
 # Kinetic mixing from mu/tau loops
@@ -595,7 +606,7 @@ def diffFluxAtEarth(t,Tx,mx,mV,Rstar,theta,phi,beta,Re=8.5,r_cut=1e-5,gV=1,gD=1,
 
 
 # %% Differential BDM event rate in the detector
-def diffEventRateAtDetector(t,Tx,mx,mV,Rstar,theta,phi,beta,Re=8.5,r_cut=1e-5,gV=1,gD=1,eps=1,tau=10):
+def diffEventRateAtDetector(t,Tx,mx,mV,Rstar,theta,phi,beta,Re=8.5,r_cut=1e-5,gV=1,gD=1,eps=1,tau=10,is_eps_0=False):
     """
     Calculate the differential event rate at the detector, the unit is:
     # per second per MeV per sr per electron
@@ -627,7 +638,7 @@ def diffEventRateAtDetector(t,Tx,mx,mV,Rstar,theta,phi,beta,Re=8.5,r_cut=1e-5,gV
     # The BDM flux at Earth
     diffFlux = diffFluxAtEarth(t,Tx,mx,mV,Rstar,theta,phi,beta,Re,r_cut,gV,gD,tau)
     # The DM-e cross section
-    croxDMe = totalCrossSectionDMe(Tx,mx,mV,eps,gD)
+    croxDMe = totalCrossSectionDMe(Tx,mx,mV,eps,gD,gV,is_eps_0)
     # The differential event rate
     diffEvent = diffFlux*croxDMe
     return diffEvent

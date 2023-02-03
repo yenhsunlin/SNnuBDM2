@@ -27,9 +27,11 @@ Tx_max = 100
 gV = 1
 gD = 1
 eps = 1
+# Turn off kinetic mixing?
+is_eps_0 = True
 
 # %% Calculate BDM flux vs. time
-def eventRatePerElectron(mx,Rstar,beta,Re=8.5,t_cut=texpMax,r_cut=1e-05,gV=gV,gD=gD,eps=eps,tau=10):
+def eventRatePerElectron(mx,Rstar,beta,Re=8.5,t_cut=texpMax,r_cut=1e-05,gV=gV,gD=gD,eps=eps,tau=10,is_eps_0=False):
     # Get mV
     mV = r_m*mx
     # Get vanishing time and thetaMax
@@ -45,7 +47,7 @@ def eventRatePerElectron(mx,Rstar,beta,Re=8.5,t_cut=texpMax,r_cut=1e-05,gV=gV,gD
         Tx = x[1]
         theta = x[2]
         phi = x[3]
-        return diffEventRateAtDetector(t,Tx,mx,mV,Rstar,theta,phi,beta,Re,r_cut,gV,gD,eps,tau)*epsPrime(Tx,gV)
+        return diffEventRateAtDetector(t,Tx,mx,mV,Rstar,theta,phi,beta,Re,r_cut,gV,gD,eps,tau,is_eps_0)
     
     # Time bound, Tx bound, theta bound, phi bound
     integrand = vegas.Integrator([[10,texp],[Tx_min,Tx_max],[0,thetaMax],[0,2*np.pi]])
@@ -73,7 +75,7 @@ if __name__ == '__main__':
     for Rstar in Rs_list:
         for beta in beta_list:
             Beta = beta*np.pi
-            targetFuncForParallelization = partial(eventRatePerElectron,Rstar=Rstar,beta=Beta)
+            targetFuncForParallelization = partial(eventRatePerElectron,Rstar=Rstar,beta=Beta,is_eps_0=is_eps_0)
             eventRate = np.array(pool.map(targetFuncForParallelization,mx_list))
             eventRate = np.vstack((mx_list,eventRate.T))
             np.savetxt(savePath + f'eventPerElectron_lightMv_noEps_Rs{Rstar:.2f}_beta{beta:.2f}.txt',
