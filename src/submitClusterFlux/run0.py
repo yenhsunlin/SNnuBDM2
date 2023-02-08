@@ -11,7 +11,7 @@ from supernovaNuBoostedDM import *
 # Path for saving data
 savePath = ''#os.getcwd()
 # How many cpu cores to be used
-cpus = mp.cpu_count()
+cpus = 6#mp.cpu_count()
 # How many iterations for vegas
 nitn = 10
 # How many evaluation numbers for vegas
@@ -41,17 +41,17 @@ def diffFluxAtEarthVersusTime(t,Tx,mx,mV,Rstar,thetaMax,beta,Re=8.5,r_cut=1e-05,
 if __name__ == '__main__':
 
     # DM mass and Tx to be calculated
-    mx_list = [1e-6,1e-5]
-    Tx_list = [5,10,20,40]
-    Rs_list = [3,8.35,8.5,8.65,14]
-    beta_list = [0,0.25,0.5,1] # unit of pi
+    mx_list = [0.1]
+    Tx_list = [10]
+    Rs_list = [8.5]
+    beta_list = [1] # unit of pi
     initial_time = 10 # seconds
     totalRuns = len(mx_list)*len(Tx_list)*len(Rs_list)*len(beta_list)
     gV = 1e-6
     gD = 1e-6
     # 
     pool = mp.Pool(cpus)
-    #i = 1
+    i = 1
     for mx in mx_list:
         mV = mx/3
         for Rstar in Rs_list:
@@ -68,7 +68,7 @@ if __name__ == '__main__':
                     #attributes = np.array([Tx,mV,Rstar,beta])
                     np.savetxt(savePath + f'flux_mx{mx:.2e}_Tx{Tx:0{3}d}_Rs{Rstar:.2f}_beta{beta:.2f}.txt',
                                flux.T,fmt='%.5e  %.5e  %d',header='time       flux         exit_code')
-                    #print(f'{i} out of {totalRuns} runs are completed',end='\r')
-                    #i+=1
+                    print(f'{i} out of 4 runs are completed',end='\r')
+                    i+=1
         
-    #print('All process are completed!',end='\n')
+    print('All process are completed!',end='\n')

@@ -514,8 +514,6 @@ def nx(r,mx):
     """
     rr=r/24.42
     return (184/mx)/(rr*(1 + rr)**2)
-    # average DM density for debug
-    #return 307/mx
 
 
 # %% BDM emissivity at the direction of psi
