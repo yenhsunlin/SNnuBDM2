@@ -6,6 +6,7 @@ __version__ = "1.0"
 __all__ = (
     # geometrical relations:
     'get_tvan_thetaM',
+    'thetaBound',
     # kinematics:
     'getVelocity',
     'getMomentum',
@@ -338,10 +339,46 @@ def maxPsi(Tx,mx):
     return np.arccos(maxCosValue)
 
 
+# find theta_max
+def thetaBound(t,Tx,mx,Rstar):
+    """
+    Finding the integral bound for theta for t, Tx abd nx
+    
+    Input
+    ------
+    t: the arrival time of BDM, origin is set to be the arrival of the first SN neutrino,
+       if t > t_van, the result is not trustable
+    Tx: DM kinetic energy
+    mx: DM mass
+    Rstar: Distance between Earth and SN, in kpc
+    
+    Output
+    ------
+    scalar: the maxmumu open angle theta that has non-zero flux, in rad
+    """
+    vx = getVelocity(Tx,mx)
+    t0 = Rstar*kpc2cm/lightSpeed
+    # find a_min
+    psiM = maxPsi(Tx,mx)
+    
+    # We will use Newton-Raphson method to find the root that corresponds to theta_max
+    # This method requires the target function _f and its derivative _fp
+    def _f(theta):
+        return np.sin(theta) + np.sin(psiM - theta)/vx - (t/t0 + 1)*np.sin(psiM)
+    
+    def _fp(theta):
+        return np.cos(theta) - np.cos(psiM - theta)/vx
+    
+    # find solution to theta bound using Newton-Raphson method
+    sol_thetaMin = root_scalar(_f,method='newton',x0=0,fprime=_fp)
+    sol_thetaMax = root_scalar(_f,method='newton',x0=np.pi/2,fprime=_fp)
+        
+    return sol_thetaMin.root,sol_thetaMax.root
+
 # %% Vanishing time
 def get_tvan_thetaM(Tx,mx,Rstar):
     """
-    Get the vanishing time and maximum theta
+    Get the vanishing time and maxmimum theta
     
     Input
     ------
@@ -351,22 +388,24 @@ def get_tvan_thetaM(Tx,mx,Rstar):
     
     Output
     ------
-    tup: maximum theta, rad
+    tup: tvan,thetaMax
     """
     # Get maximum psi and BDM velocity
     psiM = maxPsi(Tx,mx)
     vx = getVelocity(Tx,mx)
     
-    # Solving the corresponding maximum theta
-    def _thetaM(theta):
+    # Solving the corresponding theta that maximizes t
+    def _theta(theta):
         """ Target function """
         return np.cos(psiM - theta)/np.cos(theta) - vx
-    thetaM = root_scalar(_thetaM, method='brentq', bracket=[0,np.pi/2]).root
+    theta = root_scalar(_theta, method='brentq', bracket=[0,np.pi/2]).root
 
-    # Evaluating the vanishing time
+    # Evaluating the vanishing time and thetaM
     t0 = Rstar*kpc2cm/lightSpeed
-    tVan = ((np.sin(thetaM) + np.sin(psiM - thetaM)/vx)/np.sin(psiM) - 1)*t0
-    return tVan,thetaM
+    tVan = ((np.sin(theta) + np.sin(psiM - theta)/vx)/np.sin(psiM) - 1)*t0
+    _,thetaMax = thetaBound(0,Tx,mx,Rstar)
+    # Find the maximum allowed theta
+    return tVan,thetaMax
 
 
 # %% Calculate the differential cross section for nu-DM scattering
