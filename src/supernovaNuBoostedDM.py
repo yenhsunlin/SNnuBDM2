@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
-__doc__ = """"""
+__doc__ = """
+          This is the script that contains functions to calculate
+          BDM flux from every place in MW with Lmu-minus-Ltau model
+          """
 __author__ = "Yen-Hsun Lin (yenhsun@phys.ncku.edu.tw)"
 __date__ = "20230201"
-__version__ = "1.0"
+__version__ = "1.1"
 __all__ = (
     # geometrical relations:
     'get_tvan_thetaM',
