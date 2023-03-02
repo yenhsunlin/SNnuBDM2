@@ -372,11 +372,13 @@ def thetaBound(t,Tx,mx,Rstar):
     def _fp(theta):
         return np.cos(theta) - np.cos(psiM - theta)/vx
     
-    # find solution to theta bound using Newton-Raphson method
-    sol_thetaMin = root_scalar(_f,method='newton',x0=0,fprime=_fp)
-    sol_thetaMax = root_scalar(_f,method='newton',x0=np.pi/2,fprime=_fp)
+    # find solutions to theta bound using Newton-Raphson method
+    sol_thetaMin = root_scalar(_f,method='newton',x0=0,fprime=_fp).root
+    sol_thetaMax = root_scalar(_f,method='newton',x0=np.pi/2,fprime=_fp).root
+    # If thetaMin < 0, it's not physical. Set it to 0
+    if sol_thetaMin < 0: sol_thetaMin = 0
         
-    return sol_thetaMin.root,sol_thetaMax.root
+    return sol_thetaMin,sol_thetaMax
 
 # %% Vanishing time
 def get_tvan_thetaM(Tx,mx,Rstar):
