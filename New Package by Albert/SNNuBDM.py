@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 __doc__ = """"""
 __author__ = "Tsung-Han Tasi (student109022124@gapp.nthu.edu.tw)"
-__date__ = "20230219"
+__date__ = "20230306"
 __version__ = "2.0"
 __all__ = (
     # geometrical relations:
@@ -17,104 +17,6 @@ __all__ = (
     'diffFluxAtEarth',
     'diffEventRateAtDetector',
 )
-# %% --------------------------------------------------------------------- %% #
-
-"""
-Main Modification
--------------------------------------------------------------------------------
-(1) getD(d, Rstar, theta, is_square=False):
-
-...
-    # Calculate D^2 via law of cosine
-    D2 = d ** 2 + Rstar ** 2 - 2 * d * Rstar * np.cos(theta)
-    # D2 might turn minus due to round-off error, it shoud truncate at 0
-    if D2 < 0:
-        D2 = 0
-    else:
-        pass
-...
-
-changed into the form
-
-...
-    # Calculate D^2 via law of cosine
-    D2 = (d - Rstar) ** 2 + 4 * d * Rstar * np.sin(theta / 2) ** 2
-    #(To avoid negative value and increase accuracy.)
-...
--------------------------------------------------------------------------------
-(2) getEll(d, Re, theta, beta, is_square=False):
-
-...
-    # Calculate ell^2 via law of cosine
-    ell2 = Re ** 2 + (d * np.cos(theta)) ** 2 - 2 * Re * d * np.cos(theta) * np.cos(beta)
-    # ell2 might turn minus due to round-off error, it should truncate at 0
-    if ell2 < 0:
-        ell2 = 0.0
-    else:
-        pass
-...
-
-changed into the form
-
-...
-    # Calculate ell^2 via law of cosine
-    ell2 = (Re - d * np.cos(theta)) ** 2 + 4 * Re * d * np.cos(theta) * np.sin(beta / 2) ** 2
-    #(To avoid negative value and increase accuracy.)
-...
--------------------------------------------------------------------------------
-(3) getd(t, vx, Tx, mx, Rstar, theta):
-
-...
-    vx: BDM velocity in the unit of light speed
-    Rstar: the distance between Earth and SN
-...
-...
-    zeta = Rstar + lightSpeed * t / kpc2cm
-    cosTheta = np.cos(theta)
-    denominator = 1 - vx ** 2
-    if denominator != 0.0:
-        numerator = (zeta - Rstar * vx * cosTheta - np.sqrt(
-            (Rstar ** 2 - zeta ** 2) * (1 - vx ** 2) + (Rstar * vx * cosTheta - zeta) ** 2)) * vx
-        return numerator / denominator
-    else:
-        return 0.0
-...
-
-changed into the form
-
-...
-    vx: BDM velocity in the unit of light speed
-    Tx: BDM kinetic energy
-    mx: Mass of DM
-    Rstar: the distance between Earth and SN
-...
-...
-    kpct = lightSpeed * t / kpc2cm
-    # zeta = Rstar + lightSpeed * t / kpc2cm
-    cosTheta = np.cos(theta)
-    discriminant = (kpct + Rstar * (1 - vx * cosTheta)) ** 2 - kpct * mx ** 2 / (mx + Tx) ** 2 * (kpct + 2 * Rstar)
-    if discriminant > 0.0:
-        result = vx * kpct * (kpct + 2 * Rstar) / (kpct + Rstar * (1 - vx * cosTheta) + np.sqrt(discriminant))
-        return result
-    else:
-        result = vx * kpct * (kpct + 2 * Rstar) / (kpct + Rstar * (1 - vx * cosTheta))
-        return result
-...
--------------------------------------------------------------------------------
-(4) diffFluxAtEarth(t, Tx, mx, mV, Rstar, theta, phi, beta, Re=8.5, r_cut=1e-5, gV=1, gD=1, tau=10):
-
-...
-d = getd(t, vx, Rstar, theta)
-...
-
-changed into the form
-
-...
-d = getd(t, vx, Tx, mx, Rstar, theta)
-...
--------------------------------------------------------------------------------
-"""
-
 # %% --------------------------------------------------------------------- %% #
 
 import numpy as np
