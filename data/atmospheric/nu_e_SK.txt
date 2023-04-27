@@ -1,0 +1,23 @@
+# Battistoni et al., Astropart. Phys. 23, 526 (2005)
+# Atmospheric neutrino between energy 13 to 106 MeV in Super-K
+# The 1st column is neutrino energy in MeV
+# The 2nd and 3rd columns are nu_e and nu_e_bar fluxes respectively with unit 1/MeV 1/cm^2 1/s
+13      0.696E-02       0.637E-02
+15      0.746E-02       0.697E-02
+17      0.797E-02       0.795E-02
+19      0.874E-02       0.842E-02
+21      0.942E-02       0.894E-02
+24      0.101E-01       0.950E-02
+27      0.103E-01       0.993E-02
+30      0.109E-01       0.103E-01
+33      0.108E-01       0.104E-01
+38      0.107E-01       0.101E-01
+42      0.101E-01       0.961E-02
+47      0.885E-02       0.835E-02
+53      0.696E-02       0.659E-02
+60      0.644E-02       0.600E-02
+67      0.593E-02       0.564E-02
+75      0.543E-02       0.514E-02
+84      0.497E-02       0.463E-02
+94      0.451E-02       0.430E-02
+106     0.406E-02       0.372E-02
