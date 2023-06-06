@@ -525,6 +525,7 @@ def dnv(D,Ev,Lv = Lv,tau = 10):
     """
     Lv = Lv*erg2MeV*tau
     D = D*kpc2cm
+    #D = 5*kpc2cm
     
     # Fermi dirac distribution
     def _fv(Ev,Tv):
@@ -558,6 +559,7 @@ def nx(r,mx):
     """
     rr=r/24.42
     return (184/mx)/(rr*(1 + rr)**2)
+    #return (184/mx)*32
 
 
 # %% BDM emissivity at the direction of psi
