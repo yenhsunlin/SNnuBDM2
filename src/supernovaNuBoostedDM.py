@@ -557,9 +557,9 @@ def nx(r,mx):
     ------
     DM number density, #/cm^3 at r
     """
-    #rr=r/24.42
-    #return (184/mx)/(rr*(1 + rr)**2)
-    return (184/mx)*32
+    rr=r/24.42
+    return (184/mx)/(rr*(1 + rr)**2)
+    #return (184/mx)*32
 
 
 # %% BDM emissivity at the direction of psi
